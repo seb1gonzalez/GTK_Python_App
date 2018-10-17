@@ -2,6 +2,11 @@ import gi.repository
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
+"""
+Author: Topher Tighe
+10/17/18
+"""
+
 #Create the session itself with save states below
 class Session(Gtk.Box):
 
