@@ -1,0 +1,5 @@
+{'filtername': 'IPX only', 'expression': 'ipx'}
+{'filtername': 'TCP only', 'expression': 'tcp'}
+{'filtername': 'UDP only', 'expression': 'upd'}
+{'filtername': 'Non-DNS', 'expression': '!(udp.port==53 || tcp.port==53)'}
+{'filtername': 'ETHERNET broadcast', 'expression': 'Eth.addr == ff:ff:ff:ff:ff:ff'}
