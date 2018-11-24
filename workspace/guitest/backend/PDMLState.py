@@ -29,4 +29,5 @@ class PDMLState:
         return self.packet[index]
 
     def remove_packet(self, index):
+        print self.packet
         del self.packet[index]
