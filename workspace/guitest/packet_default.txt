@@ -1,0 +1,9 @@
+Frame 718: frame, eth, ip, tcp
+\tFrame 718: 74 bytes on wire (592 bits), 74 bytes captured (592 bits) on interface 0
+\tEthernet II, Src: Elitegro_dd:12:cd (00:19:21:dd:12:cd), Dst: Broadcom_de:ad:05 (00:10:18:de:ad:05)
+\tInternet Control Message Protocol
+\tTransmission Control Protocl, Src Port: 55394 (55394), Dst Port: 80 (80), Seq: 0, Len: 0
+Frame 767: frame, eth, ip, tcp
+Frame 768: frame, eth, ip, tcp
+Frame 769: frame, eth, ip, tcp, http
+Frame 784: frame, eth, ip, tcp

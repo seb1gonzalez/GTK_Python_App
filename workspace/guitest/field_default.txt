@@ -1,0 +1,5 @@
+{'fieldname': 'icmp.type', 'showname': 'Type 8 (Echo (ping) request)', 'size': '1', 'position': '34', 'show': '8', 'value': '08', 'entropy':'2'}
+{'fieldname': 'icmp.code', 'showname': 'Code 0', 'size': '1', 'position': '35', 'show': '0x00', 'value': '00', 'entropy':'2'}
+{'fieldname': 'icmp.checksum', 'showname': 'Checksum:0x6861 (correct)', 'size': '0x00', 'position': '36', 'show': '0x6861', 'value': '00', 'entropy':'0'}
+{'fieldname': 'icmp.Ident', 'showname': 'Identifier: 0x809e', 'size': '2', 'position': '38', 'show': '0x809e', 'value': '809e', 'entropy':'2'}
+{'fieldname': 'icmp.seq', 'showname': 'Sequence number: 0x0f00', 'size': '2', 'position': '40', 'show': '0x0f00', 'value': '0f00', 'entropy':'2'}
