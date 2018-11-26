@@ -12,9 +12,9 @@ class DisplayFilter:
         return self.filter.items()
 
     def add_filter(self, name, expression):
-        if name in self.filter:
+        if name in self.filter:#if already exists
             return False
-        else:
+        else:#if does not exist, then add it
             self.filter[name] = _Filter(name, expression)
             return True
 
@@ -29,6 +29,7 @@ class DisplayFilter:
         else:
             return False
 
+
     def update_filter(self, name, new_name, new_expression):
         if self.delete_filter(name):
             return self.add_filter(new_name, new_expression)
@@ -36,24 +37,39 @@ class DisplayFilter:
             return False
 
     def filter_out(self, name, pdmlstate):
-        print pdmlstate.getpackets()
-        if name in self.filter:
-            filter = self.filter[name]
-            packet = pdmlstate.getpackets() #list of Packets in pdml
-            proto_names = filter.name.split("||")
+        print_flag = True
+        name_list = name.split('||')
+        for n in range(len(name_list)):
+            if self.filter.get(name_list[n]) == None:
+                self.add_filter(name_list[n],name_list[n])
+                if print_flag:
+                    print 'Added filter(s)\n' + name_list[n]
+                    print_flag = False
 
-            pi = 0
-            packet_len = len(packet)
+                else:
+                    print name_list[n]
+
+        packet = pdmlstate.getpackets()  # list of Packets in pdml
+        pi, packet_len = 0, len(packet)
+        proto_names = self.filter.keys()  # list of filter keys
+        pn,names_len = 0,len(proto_names)
+
+        while pn < names_len:
             while pi < packet_len:
-                for proto_name in proto_names:
-                    if packet[pi].contains(proto_name):
-                        print 'found '+ proto_name
-                        pi += 1
-                    else:
-                        print pdmlstate.remove_packet(pi)
-                        packet_len -= 1
+                print 'current filter is: '+proto_names[pn]
+                if packet[pi].contains(proto_names[pn]):
+                    print 'found '+ proto_names[pn]
+                    pi += 1
+                    pn += 1
+                    break
 
-        print pdmlstate.getpackets()
+                else:
+                    pdmlstate.remove_packet(pi)
+                    packet_len -= 1
+                    break
+            pn += 1
+
+
 
 
        
@@ -81,10 +97,9 @@ class _Filter:
 
 pdmlstate = PDMLState('../output2.pdml')
 filter = DisplayFilter()
-filter.add_filter('icmp','icmp')
-filter.add_filter('tcp','tcp')
 
-filter.filter_out('icmp',pdmlstate)
+
+filter.filter_out('tcp||icmp||dns',pdmlstate)
 
 
 

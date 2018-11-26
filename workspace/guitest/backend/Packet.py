@@ -25,8 +25,8 @@ class Packet:
         del self.proto[protoindex]
 
     def contains(self, target):
-        for x in self.proto:
-            if x.getname() == target:
+        for x in range(len(self.proto)):
+            if self.getproto(x) == target:
                 return True
         return False
 
