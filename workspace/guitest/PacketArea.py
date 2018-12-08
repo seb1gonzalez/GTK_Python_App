@@ -11,13 +11,15 @@ class PacketArea(Gtk.Box):
     TOGGLE = 0
     PACKET = 1
     SIZE = 2
+    COLOR = 3
+    MSGTYPE = 4
 
     packet_tree = None
     pdmlstate = None
 
-    def __init__(self, the_fieldarea):
+    def __init__(self):
         Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL, spacing=15)
-        self._fieldarea = the_fieldarea
+        self._fieldarea = None
 
         # title packet area
         title = bold_label("<big><u>Packet Area</u></big>")
@@ -49,8 +51,8 @@ class PacketArea(Gtk.Box):
     def generate_treeview(self):
         # packet data is stored in a tree model
         # create a treestore with three columns
-        packet_store = Gtk.TreeStore(bool, str, str)
-        packet_store.append(None, [False, "", "0"])
+        packet_store = Gtk.TreeStore(bool, str, str, str, str)
+        packet_store.append(None, [False, "", "0", "#FFFFFF", ""])
 
         # Create a tree view on the created model
         view = Gtk.TreeView(activate_on_single_click=False)
@@ -64,12 +66,12 @@ class PacketArea(Gtk.Box):
 
         # Create second column to hold packet and protocol info
         renderer_packet = Gtk.CellRendererText()
-        column_packet = Gtk.TreeViewColumn(" ", renderer_packet, text=1)
+        column_packet = Gtk.TreeViewColumn(" ", renderer_packet, text=1, background=3)
         view.append_column(column_packet)
 
         # Create third column to hold packet and protocol size
         renderer_size = Gtk.CellRendererText()
-        column_size = Gtk.TreeViewColumn("Size", renderer_size, text=2)
+        column_size = Gtk.TreeViewColumn("Size", renderer_size, text=2,  background=3)
         view.append_column(column_size)
 
         view.connect("row-activated", self.update_fieldvalues)
@@ -79,7 +81,7 @@ class PacketArea(Gtk.Box):
     def update_fieldvalues(self, view, path, column):
         # this 1 comes from the way each column was appended in 'generate_treeview'
         indices = path.get_indices()
-        if view.get_column(1) == column and len(indices) == 2:
+        if view.get_column(self.PACKET) == column and len(indices) == 2:
             # it is expected a path equal to '[n1, n2]' example '[0, 3]'
             self._fieldarea.update(self.pdmlstate, indices[0], indices[1]+1)
 
@@ -89,13 +91,13 @@ class PacketArea(Gtk.Box):
         if pdmlstate is not None:
             packets = pdmlstate.getpackets()
             for packet in packets:
-                parent = packet_store.append(None, [False, " ", "0"])
+                parent = packet_store.append(None, [False, " ", "0", "#FFFFFF", ""])
 
                 proto = packet.getprotos()
                 proto_len = len(proto)
                 proto_names = ""
                 for i in range(1, proto_len):
-                    packet_store.append(parent, [False, proto[i].getshowname(), proto[i].getsize()])
+                    packet_store.append(parent, [False, proto[i].getshowname(), proto[i].getsize(), "#FFFFFF", ""])
                     proto_names = proto_names + proto[i].getname() + ", "
 
                 # set protocol names on packet header
@@ -104,6 +106,60 @@ class PacketArea(Gtk.Box):
 
         self.packet_view.set_model(packet_store)
         self.pdmlstate = pdmlstate          # keep track of current pdmlstate in the system
+
+    def color_protos(self, msgtype_handler, msgtype_name):
+        if self.pdmlstate is None:
+            return
+
+        packet_store = self.packet_view.get_model()
+
+        piter = packet_store.get_iter(Gtk.TreePath(0))  # packet iterator to loop through packets (view)
+        pi = 0
+        count = 0
+        while piter is not None:
+            packet = self.pdmlstate.getpacket(pi)
+            citer = packet_store.iter_children(piter)
+            ci = 1
+            while citer is not None:
+                proto = packet.getproto(ci)
+
+                # clasify each protocol by a msgtype and update display if it was classified
+                if msgtype_handler.classify_proto(msgtype_name, proto):
+                    count += 1
+                    msgtype = msgtype_handler.getmsgtype(msgtype_name)
+                    packet_store[citer][self.COLOR] = msgtype.get_color()
+                    packet_store[citer][self.MSGTYPE] = msgtype.get_name()
+
+                citer = packet_store.iter_next(citer)
+                ci += 1
+
+            piter = packet_store.iter_next(piter)
+            pi += 1
+
+    def find_next(self, msgtype_name, path):
+        packet_store = self.packet_view.get_model()
+
+        if path is None:
+            piter = packet_store.get_iter_first()
+        else:
+            prev = packet_store.get_iter(path)
+            piter = packet_store.iter_next(prev)
+
+        while piter is not None:
+            citer = packet_store.iter_children(piter)
+            while citer is not None:
+                if packet_store[citer][self.MSGTYPE] == msgtype_name:
+                    return packet_store.get_path(citer)
+                citer = packet_store.iter_next(citer)
+            piter = packet_store.iter_next(piter)
+
+        return None
+
+    def set_cursor(self, path):
+        self.packet_view.collapse_all()
+        self.packet_view.expand_to_path(path)
+        self.packet_view.set_cursor(path, None, False)
+        self.update_fieldvalues(self.packet_view, path, self.packet_view.get_column(self.PACKET))
 
     def on_toggled(self, widget, path):
         path_len = len(path)
@@ -170,6 +226,8 @@ class PacketArea(Gtk.Box):
 
             piter = packet_store.iter_next(piter)
 
+    def set_field_area(self, the_field_area):
+        self._fieldarea = the_field_area
 
 
 

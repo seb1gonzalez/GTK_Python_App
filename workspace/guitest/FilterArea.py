@@ -6,93 +6,68 @@ from GtkUtil import create_box
 from FilterWindow import run_popwindow
 
 
-class FilterAreaWindow(Gtk.Box):
+class FilterArea(Gtk.Box):
 
-    filter_expression_entry = None
-
-    def __init__(self):
+    def __init__(self, the_packet_area, the_iserver):
         Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL, spacing=10)
 
+        # Global variables
+        self.iserver = the_iserver
+        self.pdmlstate = None
+        self.packet_area = the_packet_area
+        self.expr_entry = None
+        self.filter_cbox = None
+
+        # Creates the title of the Filter Area
         title = Gtk.Label()
         title.set_markup("<b><big><u>Filter Area</u></big></b>")
         title.set_xalign(0.03)
         self.pack_start(title, False, False, 0)
 
-        self.filter_expression_entry = Gtk.Entry(width_chars=42)
-        #filter_expression = filter_expression_box.get_buffer()
+        # Create entry for filter expression input
+        self.expr_entry = Gtk.Entry(width_chars=42)
 
-        filter_label = bold_label("Filter")
+        # Create buttons of the Filter Area
+        apply_btn = Gtk.Button(label="Apply")
+        apply_btn.connect("clicked", self.on_apply_click)
 
-        apply_button = Gtk.Button(label="Apply")
-        apply_button.connect("clicked", self.button_clicked)
+        clear_btn = Gtk.Button(label="Clear")
+        clear_btn.connect("clicked", self.on_clear_click)
 
-        clear_button = Gtk.Button(label="Clear")
-        clear_button.connect("clicked", self.button_clicked)
+        save_btn = Gtk.Button(label="Save")
+        save_btn.connect("clicked", self.on_save_click)
 
-        save_button = Gtk.Button(label="Save")
-        save_button.connect("clicked", self.save_button_clicked)
+        apply_saved_btn = Gtk.Button(label="Apply")
+        apply_saved_btn.connect("clicked", self.on_apply_click)
 
-        saved_filter = Gtk.Label()
-        saved_filter.set_markup("<b>Saved Filter</b>")
-
+        # Create combo box for saved filters
         saved_filters = Gtk.ListStore(str)
         saved_filters.append(["\t\t\t\t "])
-        saved_filters.append(["ipx"])
-        saved_filters.append(["tcp"])
-        saved_filters.append(["udp"])
-        saved_filters.append(["!(udp.port==53 || tcp.port==53)"])
-        saved_filters.append(["Eth.addr == ff:ff:ff:ff"])
-        filter_combo_box = Gtk.ComboBox.new_with_model(saved_filters)
+        self.filter_cbox = Gtk.ComboBox.new_with_model(saved_filters)
         renderer_text = Gtk.CellRendererText()
-        filter_combo_box.pack_start(renderer_text, True)
-        filter_combo_box.add_attribute(renderer_text, "text", 0)
-        #filters = SavedFilters()
+        self.filter_cbox.pack_start(renderer_text, True)
+        self.filter_cbox.add_attribute(renderer_text, "text", 0)
 
-        apply_saved_button = Gtk.Button(label="Apply")
-        apply_saved_button.connect("clicked", self.button_clicked)
-
-        box = create_box([Gtk.Label("   "), self.filter_expression_entry, filter_label, apply_button,  # REMOVE LATER
-                          clear_button, save_button, saved_filter, filter_combo_box, apply_saved_button])
+        box = create_box([Gtk.Label("   "), self.expr_entry, bold_label("Filter"), apply_btn, clear_btn,
+                          save_btn, bold_label("Saved Filter"), self.filter_cbox, apply_saved_btn])
         box.set_spacing(15)
         self.pack_start(box, False, False, 0)
 
+    def on_apply_click(self, button):
+        if self.pdmlstate is not None:
+            self.iserver.filter_by_expr(self.expr_entry.get_text(), self.pdmlstate)
+            self.packet_area.update_packet_view(self.pdmlstate)
 
-    def button_clicked(self, widget):
-        print(widget.get_label() + " clicked")
+    def on_clear_click(self, button):
+        self.expr_entry.set_text(" ")
+        self.filter_cbox.set_active(0)
 
-    def save_button_clicked(self, button):
-        run_popwindow(self.filter_expression_entry.get_text())
+    def on_save_click(self, button):
+        run_popwindow(self.expr_entry.get_text())
 
+    def on_apply_saved_click(self, button):
+        print(button.get_label() + " clicked")
 
-
-class SavedFilters(Gtk.Box):
-    def __init__(self):
-        Gtk.Box.__init__(self)
-        self.set_border_width(10)
-
-        saved_filter = Gtk.ListStore(int, str)
-        saved_filter.append([1, "ipx"])
-        saved_filter.append([2, "tcp"])
-        saved_filter.append([3, "udp"])
-        saved_filter.append([4, "!(udp.port==53 || tcp.port==53)"])
-        saved_filter.append([5, "Eth.addr == ff:ff:ff:ff"])
-
-        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-
-        name_combo = Gtk.ComboBox.new_with_model_and_entry(saved_filter)
-        name_combo.connect("changed", self.on_name_combo_changed)
-        name_combo.set_entry_text_column(1)
-        vbox.pack_start(name_combo, False, False, 0)
-
-        self.add(vbox)
-
-    def on_name_combo_changed(self, combo):
-        tree_iter = combo.get_active_iter()
-        if tree_iter is not None:
-            model = combo.get_model()
-            row_id, name = model[tree_iter][:2]
-            print("Selected: ID=%d, name=%s" % (row_id, name))
-        else:
-            entry = combo.get_child()
-            print("Entered: %s" % entry.get_text())
+    def update_pdmlstate(self, the_pdmlstate):
+        self.pdmlstate = the_pdmlstate
 

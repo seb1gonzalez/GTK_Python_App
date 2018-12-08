@@ -26,7 +26,7 @@ def create_small_label(string):
 
 
 def show_error_dialog(parent, error_msg):
-    dialog = Gtk.Dialog("Error", parent, 0)
+    dialog = Gtk.Dialog(parent, "Error", 0)
     dialog.set_default_size(200, 150)
     box = dialog.get_content_area()
     box.add(Gtk.Label("\n"+error_msg))

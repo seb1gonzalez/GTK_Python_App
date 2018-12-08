@@ -12,6 +12,7 @@ from os import system
 import OpenSessionWindow as osw
 import StateMachineView as smv
 from backend.User import User
+from backend.InteractionServer import InteractionServer
 
 
 class MainWindow(Gtk.Window):
@@ -25,19 +26,19 @@ class MainWindow(Gtk.Window):
         self.user = User()
         self.user.add_workspace().add_session()     # default create user, workspace, and session
 
+        # Init Servers
+        iserver = InteractionServer()
+
         header = self.create_window_header()
-        container.attach(header, 0, 0, 4, 1)
-
         buttons_box = self.create_stages_buttons()
-        container.attach(buttons_box, 0, 1, 4, 1)
-
-        self.pdml_view = PDMLView()
-        container.attach(self.pdml_view, 1, 2, 3, 2)
-
+        tag_area = TagArea(iserver)
+        self.pdml_view = PDMLView(iserver, tag_area)
         session_view = SessionView()
-        container.attach(session_view, 0, 2, 1, 1)
 
-        tag_area = TagArea()
+        container.attach(header, 0, 0, 4, 1)
+        container.attach(buttons_box, 0, 1, 4, 1)
+        container.attach(self.pdml_view, 1, 2, 3, 2)
+        container.attach(session_view, 0, 2, 1, 1)
         container.attach(tag_area, 0, 3, 1, 1)
 
         self.add(container)
@@ -76,7 +77,7 @@ class MainWindow(Gtk.Window):
         if created_pdml is not None:
             session = self.user.getworkspace().getsession()
             pdmlstate = session.add_pdmlstate(created_pdml)
-            self.pdml_view.update_packet_area(pdmlstate)
+            self.pdml_view.set_pdmlstate(pdmlstate)
 
     def on_clicked_create_session(self, button):
         sp.run_popwindow()

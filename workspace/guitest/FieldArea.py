@@ -11,11 +11,12 @@ class FieldArea(Gtk.Box):
     SIZE = 3
     VALUE = 6
 
-    def __init__(self):
+    def __init__(self, the_tag_area):
         Gtk.Box.__init__(self, spacing=10, orientation=Gtk.Orientation.VERTICAL)
         # components of field area is the field view
         self.fieldview = self._generate_treeview()
         self.current_proto = None
+        self.tag_area = the_tag_area
 
         # put the field view in a scrolled view
         scrolledview = Gtk.ScrolledWindow(min_content_height=430,
@@ -137,15 +138,18 @@ class FieldArea(Gtk.Box):
             root_iter = field_store.iter_next(root_iter)
 
     def tag_field(self, view, path, column):
-        print("tag")
+        field_store = self.fieldview.get_model()
+        field_name = field_store[field_store.get_iter(path)][self.NAME]
+        self.tag_area.set_field_name(field_name)
 
     def get_fieldpairs(self):
         fieldpair = []
-        field_store = self.fieldview.get_model()
+        if self.current_proto is not None:
+            field_store = self.fieldview.get_model()
 
-        root_iter = field_store.get_iter_first()
-        fields = self.current_proto.getfields()
-        self._get_fieldpairs_helper(field_store, root_iter, fields, fieldpair)
+            root_iter = field_store.get_iter_first()
+            fields = self.current_proto.getfields()
+            self._get_fieldpairs_helper(field_store, root_iter, fields, fieldpair)
         return fieldpair
 
     def _get_fieldpairs_helper(self, field_store, root_iter, fields, fieldpair):

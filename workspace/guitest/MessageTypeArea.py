@@ -1,21 +1,30 @@
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
-from GtkUtil import bold_label
 from Template import Template
 from Equivalency import Equivalency
 from Generation import Generation
 from MessageType import MessageType
 from Dependency import Dependency
+from backend.InteractionServer import InteractionServer
 
 
 class MessageTypeArea(Gtk.Box):
 
-    messagetype = MessageType()
+    NEW_MODIFY = 0
+    DEPENDENCY = 1
+    TEMPLATE = 2
+    EQUIVALENCY = 3
+    GENERATION = 4
 
-    def __init__(self):
+    def __init__(self, the_packet_area, iserver):
         Gtk.Box.__init__(self, spacing=10, orientation=Gtk.Orientation.VERTICAL)
         self.set_homogeneous(False)
+
+        # components of the MessageTypeArea
+        self.msgtype_view = MessageType(iserver, the_packet_area)
+        self.dependency_view = Dependency(iserver, the_packet_area)
+        self.page_num = 0
 
         title = Gtk.Label()
         title.set_markup("<u><b><big> Message Type Area </big></b></u>")
@@ -23,8 +32,9 @@ class MessageTypeArea(Gtk.Box):
         self.pack_start(title, True, True, 0)
 
         notebook = Gtk.Notebook()
-        pages = [('New/Modify', self.messagetype),
-                 ('Dependency', Dependency()),
+        notebook.connect("switch_page", self.update_page)
+        pages = [('New/Modify', self.msgtype_view),
+                 ('Dependency', self.dependency_view),
                  ('Template', Template()),
                  ('Equivalency', Equivalency()),
                  ('Generation', Generation())]
@@ -37,10 +47,23 @@ class MessageTypeArea(Gtk.Box):
             notebook.append_page(content, Gtk.Label(name))
 
     def insert_pairs(self, pairs):
-        self.messagetype.insert_fields(pairs)
+        if self.page_num == self.NEW_MODIFY:
+            self.msgtype_view.insert_fields(pairs)
+        if self.page_num == self.DEPENDENCY:
+            self.dependency_view.insert_fields(pairs)
 
-    def is_pairs_checked(self):
-        return self.messagetype.is_pairs_checked()
+    def remove_pairs(self, pairs):
+        if self.page_num == self.NEW_MODIFY:
+            self.msgtype_view.remove_fields(pairs)
+        if self.page_num == self.DEPENDENCY:
+            self.dependency_view.remove_fields(pairs)
+
+    def update_page(self, notebook, page, page_num):
+        self.page_num = page_num
+        if page_num == self.NEW_MODIFY or page_num == self.DEPENDENCY:
+            page.update_msgtype_cbox()
+
+
 
 
 

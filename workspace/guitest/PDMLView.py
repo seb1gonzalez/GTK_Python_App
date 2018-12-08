@@ -1,7 +1,7 @@
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
-from FilterArea import FilterAreaWindow
+from FilterArea import FilterArea
 from PacketArea import PacketArea
 from FieldArea import FieldArea
 from MessageTypeArea import MessageTypeArea
@@ -11,14 +11,17 @@ from GtkUtil import create_small_label
 
 class PDMLView(Gtk.Box):
 
-    def __init__(self):
+    def __init__(self, iserver, tag_area):
         Gtk.Box.__init__(self, spacing=20, orientation=Gtk.Orientation.VERTICAL)
         self.set_homogeneous(False)
 
         # components of the pdml view are packet area, filter_area and pdml view bottom
-        self.filter_area = FilterAreaWindow()
-        self.pdml_viewbottom = _PDMLViewBottom()
-        self.packet_area = PacketArea(self.pdml_viewbottom.get_fieldarea())
+        self.packet_area = PacketArea()
+        self.filter_area = FilterArea(self.packet_area, iserver)
+        self.pdml_viewbottom = _PDMLViewBottom(self.packet_area, iserver, tag_area)
+
+        # Set dependencies among areas
+        self.packet_area.set_field_area(self.pdml_viewbottom.get_fieldarea())
 
         head = Gtk.HeaderBar()
         head.props.title = "PDML View"
@@ -54,17 +57,18 @@ class PDMLView(Gtk.Box):
         box.set_spacing(5)
         return box
 
-    def update_packet_area(self, pdmlstate):
+    def set_pdmlstate(self, pdmlstate):
         self.packet_area.update_packet_view(pdmlstate)
+        self.filter_area.update_pdmlstate(pdmlstate)
 
 
 class _PDMLViewBottom(Gtk.Grid):
 
-    def __init__(self):
+    def __init__(self, the_packet_area, iserver, tag_area):
         Gtk.Grid.__init__(self, column_spacing=5, row_homogeneous=False, column_homogeneous=False)
         # components of pdml view bottom is field area and message type area
-        self.field_area = FieldArea()
-        self.messagetype_area = MessageTypeArea()
+        self.field_area = FieldArea(tag_area)
+        self.messagetype_area = MessageTypeArea(the_packet_area, iserver)
 
         buttons = Gtk.Box(spacing=15, orientation=Gtk.Orientation.VERTICAL)
 
@@ -75,6 +79,7 @@ class _PDMLViewBottom(Gtk.Grid):
 
         minus_img = Gtk.Image.new_from_file("minus_arrow.png")
         minus_button = Gtk.Button()
+        minus_button.connect("clicked", self.on_click_minus_button)
         minus_button.add(minus_img)
 
         buttons.pack_start(plus_button, False, False, 0)
@@ -90,5 +95,9 @@ class _PDMLViewBottom(Gtk.Grid):
     def on_click_plus_button(self, button):
         fieldpairs = self.field_area.get_fieldpairs()        # returns array of tuples (field name, value)
         self.messagetype_area.insert_pairs(fieldpairs)
+
+    def on_click_minus_button(self, button):
+        fieldpairs = self.field_area.get_fieldpairs()        # returns array of tuples (field name, value)
+        self.messagetype_area.remove_pairs(fieldpairs)
 
 
