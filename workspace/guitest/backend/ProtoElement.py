@@ -27,3 +27,11 @@ class ProtoElement:
 
     def get_dictattrib(self):
         return self.attrib
+
+    def find(self, field_name, field_value):
+        for f in self.field:             # if field_value is empty means the field value pair only request name
+            if field_name == f.getname() and (field_value == "" or field_value == f.getvalue()):
+                return True
+
+        return False
+

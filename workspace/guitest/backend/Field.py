@@ -37,7 +37,7 @@ class Field:
     def get_internalfields(self):
         return self.internal_field
 
-    def get_iternalfield(self, index):
+    def get_internalfield(self, index):
         return self.internal_field[index]
 
     # Modify fields

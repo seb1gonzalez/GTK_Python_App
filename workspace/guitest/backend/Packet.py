@@ -24,12 +24,9 @@ class Packet:
     def remove_proto(self, protoindex):
         del self.proto[protoindex]
 
-    def contains(self, target):
-        for x in range(len(self.proto)):
-            if self.getproto(x) == target:
+    def contains(self, proto_name):
+        for pr in self.proto:
+            if pr.getname() == proto_name:
                 return True
         return False
-
-
-
 
