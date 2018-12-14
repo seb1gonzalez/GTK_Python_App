@@ -43,7 +43,9 @@ class DisplayFilter:
             single_filter = self.filter[name]
             self.filter_by_expr(single_filter.get_expression(), pdmlstate)
 
+
     def filter_by_expr(self, expression, pdmlstate):
+
         expression = expression.replace(" ", "")  # remove spaces in the expression
         proto = expression.split('||')
 
@@ -51,15 +53,19 @@ class DisplayFilter:
         plen = len(packet) - 1
 
         while plen >= 0:
+
             was_found = False
             for pr in proto:
+
                 print pr
                 if packet[plen].contains(pr):
                     was_found = True
                     break
             if was_found is False:
                 pdmlstate.remove_packet(plen)
+
             plen -= 1
+
 
 
 class _Filter:
@@ -78,3 +84,4 @@ class _Filter:
     def update(self, new_name, new_expression):
         self.name = new_name
         self.expression = new_expression
+
